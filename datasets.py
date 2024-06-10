@@ -5,20 +5,11 @@ import numpy as np
 import torch.nn.functional as F
 from tensorflow.keras.datasets import mnist
 import tensorflow as tf
+import csv
+
 
 
 def mackey_glass_sequence(sample_len=1000, tau=17, delta_t=10, seed=0, n_samples=1):
-    # Adapted from https://github.com/mila-iqia/summerschool2015/blob/master/rnn_tutorial/synthetic.py
-    '''
-    mackey_glass(sample_len=1000, tau=17, seed = None, n_samples = 1) -> input
-    Generate the Mackey Glass time-series. Parameters are:
-        - sample_len: length of the time-series in timesteps. Default is 1000.
-        - tau: delay of the MG - system. Commonly used values are tau=17 (mild
-          chaos) and tau=30 (moderate chaos). Default is 17.
-        - seed: to seed the random generator, can be used to generate the same
-          timeseries at each invocation.
-        - n_samples : number of samples to generate
-    '''
 
     # Initial stuff
     history_len = tau * delta_t
@@ -112,5 +103,53 @@ def generate_psMNIST_data(seed=0):
     num_classes = 10
     y_train = np.expand_dims(tf.keras.utils.to_categorical(y_train, num_classes), 1)
     y_test = np.expand_dims(tf.keras.utils.to_categorical(y_test, num_classes), 1)
+    return (x_train, y_train), (x_test, y_test)
+
+
+
+def generate_weather_data(delay_pred=1, batch_size=10, split_indx=33600):
+    '''
+        Climatological data of 1,600 U.S. locations from 2010 to 2013 acquired at https://www.ncei.noaa.gov/data/local-climatological-data/.
+        This is a modification of the original usage of the dataset (exaplained in https://arxiv.org/pdf/2012.07436.pdf). 
+    '''
+
+    # Read data
+    with open('data/WTH.csv', newline='') as csvfile:
+        data = np.array(list(csv.reader(csvfile)))
+
+    # Remove the repeated celsius variables (DryBulb, DewPoint, WetBulb)
+    data = np.delete(data, [3,6,12], axis=1)
+
+    # Separate weather features names and dates
+    dates = data[1:, 0]
+    features = data[0, 1:]
+    data = data[1:,1:].astype(float)
+
+    # Normalize data
+    max_v = np.max(data, axis=0)
+    min_v = np.min(data, axis=0)
+    data = (data - min_v) / (max_v - min_v)
+
+    # Separate in training and test set
+    x_train = data[:split_indx]
+    x_test = data[split_indx:]
+
+    # Prepare the inputs and targets accordingly
+    y_train = x_train[delay_pred:, 1]
+    y_test = x_test[delay_pred:, 1]
+    x_train = x_train[:-delay_pred]
+    x_test = x_test[:-delay_pred]
+    y_train = np.expand_dims(y_train, -1)
+    y_test = np.expand_dims(y_test, -1)
+
+    # Batch data
+    indx_batch_train = int(len(x_train)/batch_size)
+    indx_batch_test = int(len(x_test)/batch_size)
+    x_train = np.stack([x_train[i*indx_batch_train:(i+1)*indx_batch_train] for i in range(batch_size)], axis=1)
+    y_train = np.stack([y_train[i*indx_batch_train:(i+1)*indx_batch_train] for i in range(batch_size)], axis=1)
+    x_test = np.stack([x_test[i*indx_batch_test:(i+1)*indx_batch_test] for i in range(batch_size)], axis=1)
+    y_test = np.stack([y_test[i*indx_batch_test:(i+1)*indx_batch_test] for i in range(batch_size)], axis=1)
+
+    # return dates, features, data
     return (x_train, y_train), (x_test, y_test)
 
