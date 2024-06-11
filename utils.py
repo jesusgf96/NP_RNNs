@@ -59,3 +59,48 @@ def linear():
 def tanh():
     return lambda x: (torch.exp(x) - torch.exp(-x)) / (torch.exp(x) + torch.exp(-x))
 
+
+def epoch_profiling(model, x_train, y_train, criterion, lr_fwd, noise_std, algorithm, optimizer, decorrelation_prof, total_lenght_sequence):
+
+    # Initial stuff
+    outs = model.reset_states() # Reset before input presentation
+    optimizer.zero_grad()
+    pred = []
+
+    if algorithm == 'BP':
+
+        for t in range(total_lenght_sequence):
+
+            # Input data point
+            last_out, outs = model(x_train[t], outs)
+            pred.append(last_out)
+
+            # Compute decorelation updates (spatially)
+            if decorrelation_prof:
+                model.compute_update_params(lr_decor=0)
+
+        # Apply decorrelation updates
+        if decorrelation_prof:
+            model.apply_update_params()
+
+        # Compute loss
+        loss = criterion(torch.stack(pred), y_train)
+
+        # Update weights
+        loss.backward()
+        optimizer.step()
+
+    #-- NP --#
+    elif algorithm == 'NP':
+        model.node_perturbation(x_train, y_train, loss=criterion, lr=lr_fwd, noise_std=noise_std, decorrelation_prof=decorrelation_prof)
+
+    #-- WP --#
+    elif algorithm == 'WP':
+        model.weight_perturbation(x_train, y_train, loss=criterion, lr=lr_fwd, noise_std=noise_std, decorrelation_prof=decorrelation_prof)
+
+    #-- ANP --#
+    elif algorithm == 'ANP':
+        model.node_perturbation_activity(x_train, y_train, loss=criterion, lr=lr_fwd, noise_std=noise_std, decorrelation_prof=decorrelation_prof)
+
+
+
