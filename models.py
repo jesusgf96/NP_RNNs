@@ -123,7 +123,7 @@ class RNN(nn.Module):
 
 
     # Node perturbation updating rule
-    def node_perturbation(self, input_sequence, targets, loss, lr, noise_std=10e-6):
+    def node_perturbation(self, input_sequence, targets, loss, lr, noise_std=10e-6, decorrelation_prof=False):
 
         # States of the network over time
         lenght_sequence = input_sequence.shape[0]
@@ -150,6 +150,14 @@ class RNN(nn.Module):
                 losses[t] = loss(targets, last_out) # One single label per sequence
             else:
                 losses[t] = loss(targets[t], last_out) # One label per timestep
+            
+            # Compute decorrelation updates inside this function (for profiling)
+            if decorrelation_prof:
+                self.compute_update_params(lr_decor=0)
+
+        # Apply decorrelation updates (for profiling)
+        if decorrelation_prof:
+            self.apply_update_params()
 
         # Forward pass over the sequence with noise (noise not applied to the input)
         outs = self.reset_states()
@@ -178,7 +186,7 @@ class RNN(nn.Module):
 
 
     # Node perturbation updating rule
-    def weight_perturbation(self, input_sequence, targets, loss, lr, noise_std=10e-6):
+    def weight_perturbation(self, input_sequence, targets, loss, lr, noise_std=10e-6, decorrelation_prof=False):
 
         # States of the network over time
         lenght_sequence = input_sequence.shape[0]
@@ -197,6 +205,14 @@ class RNN(nn.Module):
                 losses[t] = loss(targets, last_out) # One single label per sequence
             else:
                 losses[t] = loss(targets[t], last_out) # One label per timestep
+            
+            # Compute decorrelation updates inside this function (for profiling)
+            if decorrelation_prof:
+                self.compute_update_params(lr_decor=0)
+
+        # Apply decorrelation updates (for profiling)
+        if decorrelation_prof:
+            self.apply_update_params()
 
         # Forward pass over the sequence with noise (noise not applied to the input)
         outs = self.reset_states()
@@ -222,7 +238,7 @@ class RNN(nn.Module):
 
 
     # Node perturbation updating rule
-    def node_perturbation_activity(self, input_sequence, targets, loss, lr, noise_std=10e-6):
+    def node_perturbation_activity(self, input_sequence, targets, loss, lr, noise_std=10e-6, decorrelation_prof=False):
 
         # States of the network over time
         lenght_sequence = input_sequence.shape[0]
@@ -248,6 +264,14 @@ class RNN(nn.Module):
                 losses[t] = loss(targets, last_out) # One single label per sequence
             else:
                 losses[t] = loss(targets[t], last_out) # One label per timestep
+            
+            # Compute decorrelation updates inside this function (for profiling)
+            if decorrelation_prof:
+                self.compute_update_params(lr_decor=0)
+
+        # Apply decorrelation updates (for profiling)
+        if decorrelation_prof:
+            self.apply_update_params()
 
         # Forward pass over the sequence with noise (noise not applied to the input)
         outs_noisy = self.reset_states()
