@@ -9,12 +9,11 @@ import csv
 
 
 
-def mackey_glass_sequence(sample_len=1000, tau=17, delta_t=10, seed=0, n_samples=1):
+def mackey_glass_sequence(sample_len=1000, tau=17, delta_t=10, n_samples=1):
 
     # Initial stuff
     history_len = tau * delta_t
     timeseries = 1.2
-    np.random.seed(seed)
     samples = []
 
     # Iterate samples
@@ -39,12 +38,11 @@ def mackey_glass_sequence(sample_len=1000, tau=17, delta_t=10, seed=0, n_samples
 
 
 
-def generate_mackey_glass_data(n_batches=1, length=5000, seed=0, predict_length=15, tau=17, washout=100, center=True):
+def generate_mackey_glass_data(n_batches=1, length=5000, predict_length=15, tau=17, washout=100, center=True):
     
     # Initial stuff
     X = np.stack(mackey_glass_sequence(
-        sample_len=length+predict_length+washout, tau=tau,
-        seed=seed, n_samples=n_batches*2), axis=1)
+        sample_len=length+predict_length+washout, tau=tau, n_samples=n_batches*2), axis=1)
     X = X[washout:, :, :]
     
     # De-mean it
@@ -61,7 +59,6 @@ def generate_mackey_glass_data(n_batches=1, length=5000, seed=0, predict_length=
 def generate_copy_data(delay=10, lenght=100, amp=10, batch_size=1):
 
     # Initial stuff
-    np.random.seed(seed)
     zeros_x = np.zeros((delay, batch_size))
     markers = (amp-1) * np.ones((lenght, batch_size))
     zeros_y = np.zeros((lenght+delay, batch_size))
