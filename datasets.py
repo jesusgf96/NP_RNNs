@@ -58,7 +58,7 @@ def generate_mackey_glass_data(n_batches=1, length=5000, seed=0, predict_length=
 
 
 
-def generate_copy_data(delay=10, lenght=100, amp=10, batch_size=1, seed=0):
+def generate_copy_data(delay=10, lenght=100, amp=10, batch_size=1):
 
     # Initial stuff
     np.random.seed(seed)
