@@ -314,7 +314,7 @@ class RNN(nn.Module):
             # Decorrelation weights
             corr = (1/self.batch_size)*torch.einsum('ni,nj->ij', self.x_hat[indx], self.x_hat[indx])*(1.0 - self.eyes[indx])
             dD = (torch.einsum('ij,jk->ik', corr, self.decor_layers[indx].weight))
-            dD = lr_decor * corr
+            dD = lr_decor * dD
 
             # Apply updates online
             self.decor_layers[indx].weight.data = self.decor_layers[indx].weight.data - dD
@@ -335,7 +335,7 @@ class RNN(nn.Module):
             # Decorrelation weights
             corr = (1/self.batch_size)*torch.einsum('ni,nj->ij', self.x_hat[indx], self.x_hat[indx])*(1.0 - self.eyes[indx])
             dD = (torch.einsum('ij,jk->ik', corr, self.decor_layers[indx].weight))
-            dD = lr_decor * corr
+            dD = lr_decor * dD
 
             # Store updates but don't apply them
             self.dD_hist[indx].append(dD)
